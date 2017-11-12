@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    *{
+      padding:0;
+      margin:0;
+    }
+    button{
+      margin:0 auto;
+      display: block;
+    }
+    #map{
+      margin:0 auto;
+      height: 600px;
+      width: 800px;
+      background-color: #ccc;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+<!--<button>开始游戏</button>-->
+<div id='map'></div>
+</body>
+<script>
+  var map = document.querySelector('#map')
+  var time;
+
+//  创建实物对象
+  function Food(option){
+    option=option || {};
+    this.height=option.height || 20;
+    this.width=option.width || 20;
+    this.bgColor=option.bgColor || 'green';
+    this.x=option.x || 0;
+    this.y=option.y || 0;
+  }
+  Food.prototype.render=function(map){
+    var div=document.createElement('div');
+    map.appendChild(div);
+    div.style.height=this.height+'px';
+    div.style.width=this.width+'px';
+    div.style.backgroundColor=this.bgColor;
+    div.style.position='absolute';
+    this.x=parseInt(Math.random()*map.offsetWidth/this.width);
+    this.y=parseInt(Math.random()*map.offsetHeight/this.height);
+    div.style.left=this.x*this.width+'px';
+    div.style.top=this.y*this.height+'px';
+
+  }
+
+//  创建蛇
+  function Snake(option){
+    option = option || {};
+    this.height=option.height || 20;
+    this.width=option.width || 20;
+    this.headColor=option.headColor || 'red';
+    this.bodyColor=option.bodyColor || 'pink';
+    this.direction=option.direction || 'right';
+    this.body=[
+      {x:3,y:0,bgColor:this.headColor},
+      {x:2,y:0,bgColor:this.bodyColor},
+      {x:1,y:0,bgColor:this.bodyColor}
+    ]
+  }
+  Snake.prototype.render=function(map){
+    for (var i = 0, len = this.body.length; i < len; i++) {
+      var span=document.createElement('span');
+      map.appendChild(span);
+      span.style.height=this.height+'px';
+      span.style.width=this.width+'px';
+      span.style.backgroundColor=this.body[i].bgColor;
+      span.style.position='absolute';
+      span.style.top=this.body[i].y*this.height+'px';
+      span.style.left=this.body[i].x*this.width+'px';
+    }
+  }
+  Snake.prototype.move=function(map,food){
+//    记录蛇尾的坐标数据
+    var last=this.body[this.body.length-1];
+//    蛇身
+    for (var i = this.body.length-1; i >0; i--) {
+      this.body[i].x = this.body[i-1].x;
+      this.body[i].y = this.body[i-1].y;
+    }
+//    蛇头
+    switch (this.direction){
+      case "right":
+        this.body[0].x++;
+        break;
+      case "left":
+        this.body[0].x--;
+        break;
+      case "up":
+        this.body[0].y--;
+        break;
+      case "down":
+        this.body[0].y++;
+        break;
+    }
+//    吃掉方块
+    if(this.body[0].x==food.x && this.body[0].y==food.y){
+      this.body.push({
+        x:last.x,
+        y:last.y,
+        bgColor:last.bgColor
+      })
+      map.removeChild(map.querySelector('div'));
+      food.render(map);
+    }
+//    出界
+    if(this.body[0].x<0 || this.body[0].x>map.offsetWidth/this.width || this.body[0].y<0 || this.body[0].y>map.offsetHeight/this.height){
+      clearInterval(time);
+      alert('Game Over');
+    }
+//    删除原有蛇
+    var spans = map.querySelectorAll('span')
+    for (var i = 0, len = spans.length; i < len; i++) {
+      map.removeChild(spans[i])
+    }
+    this.render(map);
+  }
+
+
+
+
+
+
+
+//  测试
+  var food = new Food();
+  food.render(map)
+  var snake = new Snake()
+  snake.render(map)
+  document.onkeydown=function(e){
+//    keycode 37 = Left ←
+//    keycode 38 = Up ↑
+//    keycode 39 = Right →
+//    keycode 40 = Down ↓
+    switch (e.keyCode){
+      case 39:
+        snake.direction='right';
+        break
+      case 37:
+        snake.direction='left';
+        break
+      case 38:
+        snake.direction='up';
+        break
+      case 40:
+        snake.direction='down';
+        break
+    }
+    clearInterval(time);
+    time = setInterval(function() {
+      snake.move(map,food)
+    },80)
+  }
+</script>
+</html>
